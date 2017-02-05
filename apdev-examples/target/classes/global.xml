@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:context="http://www.springframework.org/schema/context" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+
+<configuration doc:name="Configuration">
+<expression-language>
+<global-functions>
+def logMessage(loggerName, messageToLog) {
+return "[" + flow.name + ":" + loggerName + "]: " + messageToLog;
+}
+</global-functions>
+</expression-language>
+</configuration>
+
+<http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8081" responseTimeout="100000" doc:name="HTTP Request Configuration" protocol="HTTP"/>
+    <context:property-placeholder location="example-${env}.properties"/>
+    <sfdc:config name="Salesforce__Basic_Authentication" username="${sfdc.username}" password="${sfdc.password}" securityToken="${sfdc.token}" doc:name="Salesforce: Basic Authentication"/>
+    <jms:activemq-connector name="Active_MQ" specification="1.1" brokerURL="${jms.url}" validateConnections="true" doc:name="Active MQ"/>
+
+
+
+</mule>
