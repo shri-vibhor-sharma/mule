@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:imaps="http://www.mulesoft.org/schema/mule/imaps" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:imap="http://www.mulesoft.org/schema/mule/imap" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:pop3="http://www.mulesoft.org/schema/mule/pop3" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/pop3 http://www.mulesoft.org/schema/mule/pop3/current/mule-pop3.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/imap http://www.mulesoft.org/schema/mule/imap/current/mule-imap.xsd
+http://www.mulesoft.org/schema/mule/imaps http://www.mulesoft.org/schema/mule/imaps/current/mule-imaps.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
+http://www.mulesoft.org/schema/mule/smtps http://www.mulesoft.org/schema/mule/smtps/current/mule-smtps.xsd">
+    <file:connector name="File1" autoDelete="true" streaming="true" validateConnections="true" doc:name="File"/>
+    <imaps:endpoint host="imap.gmail.com" port="993" user="tzar.software" password="vibhorrajrahul" name="IMAP1" responseTimeout="10000" doc:name="IMAP"/>
+    <smtp:gmail-connector name="Gmail" contentType="text/html" validateConnections="true" doc:name="Gmail"/>
+    <flow name="pollemailsFlow">
+        <imap:inbound-endpoint responseTimeout="10000" ref="IMAP1" doc:name="poll_email_from_gmail"/>
+        <expression-filter expression="#[message.inboundProperties.subject contains 'Mulesoft']" doc:name="Expression_if_Subject_contains_Mulesoft"/>
+        <set-session-variable variableName="sender" value="#[message.inboundProperties.fromAddress]" doc:name="session_setSenderOFMail"/>
+        <logger message="#[message.inboundProperties.fromAddress]" level="INFO" doc:name="log_fromAddress"/>
+         
+        <logger message="#[message.inboundAttachments.keySet()]" level="INFO" doc:name="Log_Attachment_Name"/>
+        <set-variable variableName="fileList" value="#[message.inboundAttachments.keySet()]" doc:name="Variable"/>
+        <foreach collection="#[message.inboundAttachments]" doc:name="ForEach_Attachment_from_mail">
+            <set-payload value="#[payload]" encoding="utf-8" mimeType="application/zip" doc:name="setPayload_as_Attachement"/>
+            <file:outbound-endpoint path="C:\Users\VIBHOR\Desktop\bacchan" outputPattern="#[flowVars.key]" connector-ref="File1" responseTimeout="10000" doc:name="Store_to_File"/>
+        </foreach>
+        <flow-ref name="send_CE_SubFlw" doc:name="send_CE_SubFlw"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-payload value="#[message.exception]" doc:name="SetErrorEmail"/>
+            <smtp:outbound-endpoint host="smtp.gmail.com"  port="587" user="tzar.software@gmail.com" password="vibhorrajrahul" connector-ref="Gmail" to="tzar.software@gmail.com" subject="'Error in Payload for instance_ID-' #[message.id]" responseTimeout="10000" doc:name="SMTP"/>
+        </catch-exception-strategy>
+        
+        <!-- trusted method to poll the atachment from email its working fine 
+         <expression-transformer doc:name="Expression">
+        <return-argument evaluator="attachments-list" expression="*" />
+     </expression-transformer>
+     <set-variable variableName="fileList" value="#[message.inboundAttachments.keySet()]" doc:name="Variable"/>
+        <collection-splitter doc:name="Collection Splitter"/>
+         <file:outbound-endpoint path="C:\Users\VIBHOR\Desktop\bacchan" outputPattern="#[function:datestamp].txt" connector-ref="File1" doc:name="File" responseTimeout="10000"/>
+     -->
+    
+    </flow>
+    <sub-flow name="send_CE_SubFlw">
+        <set-payload value="'Hello Your message has been posted successfully'" doc:name="set_message"/>
+        <smtp:outbound-endpoint host="smtp.gmail.com" port="587" user="tzar.software@gmail.com" password="vibhorrajrahul" connector-ref="Gmail" to="#[sessionVars.sender]" subject="NNTO:Your file has been read successfully" responseTimeout="10000" doc:name="SMTP"/>
+    </sub-flow>
+</mule>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <flow name="Choice-Router-and-ReferenceFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/>
+        <set-session-variable variableName="requestType" value="#[message.inboundProperties.'http.method']" doc:name="setRequestType"/>
+        <logger message="#[sessionVars.requestType]" level="INFO" doc:name="sessionLogger"/>
+        <choice doc:name="Choice">
+            <when expression="#[sessionVars.requestType == 'GET']">
+                <flow-ref name="getFlow" doc:name="getFlow"/>
+            </when>
+            <when expression="#[sessionVars.requestType == 'POST']">
+                <flow-ref name="putFlow" doc:name="putFlow"/>
+            </when>
+            <otherwise>
+                <flow-ref name="defaultFlow" doc:name="defaultFlow"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="getFlow" processingStrategy="synchronous">
+        <logger message="#['Inside the Get flow']" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="putFlow" processingStrategy="synchronous">
+        <logger message="#['Inside the Put Flow']" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="defaultFlow" processingStrategy="synchronous">
+        <logger message="#['Inside the Default Flow']" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+    <spring:beans>
+        <spring:bean id="LockSynchronizer" name="LockSynchronizer" class="org.mule.util.LockSynchronizer.LockSynchronizer"/>
+    </spring:beans>
+    <file:connector name="File" writeToDirectory="C:\Users\VIBHOR\Desktop" autoDelete="true" streaming="true" validateConnections="true" doc:name="File"/>
+    <flow name="semaphoreFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/semaphore" doc:name="HTTP"/>
+        <logger message="#[app.registry['LockSynchronizer'].getLock()]" level="INFO" doc:name="Copy_of_Logger"/>
+        <expression-component doc:name="Acquire Lock"><![CDATA[app.registry['LockSynchronizer'].lock();]]></expression-component>
+        <set-payload value="#[message.payload]" doc:name="Set Payload"/>
+        <file:outbound-endpoint path="C:\Users\VIBHOR\Desktop" outputPattern="vibs.txt" connector-ref="File" responseTimeout="10000" doc:name="File"/>
+        <expression-component doc:name="check Lock Status"><![CDATA[app.registry['LockSynchronizer'].getLock();]]></expression-component>
+        <logger message="#[app.registry['LockSynchronizer'].getLock()]" level="INFO" doc:name="Logger"/>
+        <expression-component doc:name="remove lock"><![CDATA[app.registry['LockSynchronizer'].lock();]]></expression-component>
+    </flow>
+</mule>
