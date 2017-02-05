@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "vibhoremployees"
+        }
+    },
+    "id": "1a1a2d73-cfe0-4432-a947-12c1e434cd52",
+    "version": "5.2.0.0"
+}

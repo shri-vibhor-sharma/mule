@@ -1,0 +1,9 @@
+org\mule\example\loanbroker\creditagency\CreditAgencyService.class
+org\mule\example\loanbroker\creditagency\DefaultCreditAgency.class
+org\mule\example\loanbroker\message\CustomerQuoteRequest.class
+org\mule\example\loanbroker\model\CreditProfile.class
+org\mule\example\loanbroker\model\LoanQuote.class
+org\mule\example\loanbroker\model\Customer.class
+org\mule\example\loanbroker\bank\BankService.class
+org\mule\example\loanbroker\bank\Bank.class
+org\mule\example\loanbroker\message\LoanBrokerQuoteRequest.class

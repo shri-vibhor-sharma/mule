@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <sfdc:config name="Salesforce__Basic_Authentication" username="svibhors@gmail.com" password="Meera92!!" securityToken="e1H9xuJRGIjmdqKA4oJFzmGH" doc:name="Salesforce: Basic Authentication"/>
+    <db:generic-config name="Generic_Database_Configuration" url="jdbc:mysql://localhost:3306/mysql?user=root&amp;password=vibhor" driverClassName="com.mysql.jdbc.Driver" doc:name="Generic Database Configuration"/>
+    <flow name="sfdc_to_dbFlow" processingStrategy="synchronous">
+        <poll doc:name="Poll_new_accounts">
+            <fixed-frequency-scheduler frequency="5" timeUnit="SECONDS"/>
+            <watermark variable="lastQueryDate" default-expression="2014-11-08T00:00:00Z" selector="MAX" selector-expression="#[payload.LastModifiedDate]"/>
+            <sfdc:query config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT AccountNumber,BillingCity,Id,LastModifiedDate,Name,Phone,Type,Website FROM Account WHERE LastModifiedDate &gt; #[flowVars['lastQueryDate']]" doc:name="poll for new accounts"/>
+        </poll>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload map $ 
+
+]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Log-Payload"/>
+        <db:insert config-ref="Generic_Database_Configuration" bulkMode="true" doc:name="Database">
+            <db:parameterized-query><![CDATA[INSERT INTO vibhor.Account (
+	AccountNumber,
+	BillingCity,
+	Name,
+	Phone,
+	Website
+) VALUES (
+	#[payload['AccountNumber']],
+	#[payload['BillingCity']],
+	#[payload['Name']],
+	#[payload['Phone']],
+	#[payload['Website']]
+)]]></db:parameterized-query>
+        </db:insert>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>

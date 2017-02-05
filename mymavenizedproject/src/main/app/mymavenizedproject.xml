@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <spring:beans>
+        <spring:bean id="Bean" name="Bean"/>
+        <spring:bean id="Bean1" name="Bean1"/>
+        <spring:bean id="Bean2" name="Bean2"/>
+        <spring:bean id="Bean3" name="Bean3"/>
+    </spring:beans>
+    <flow name="mymavenizedprojectFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" allowedMethods="POST" doc:name="HTTP"/>
+        <message-filter throwOnUnaccepted="true" doc:name="Message">
+            <mulexml:schema-validation-filter schemaLocations="emp.xsd" returnResult="true" resourceResolver-ref="Bean2" errorHandler-ref="Bean3"/>
+        </message-filter>
+        <set-payload value="#['hello Mr -'+message.payload]" doc:name="Set Payload"/>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-payload value="#[message.payloadAs(java.lang.String) +' is not an integer']" doc:name="Set Payload"/>
+        </catch-exception-strategy>
+    </flow>
+</mule>
