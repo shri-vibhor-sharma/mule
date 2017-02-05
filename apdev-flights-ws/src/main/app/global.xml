@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:context="http://www.springframework.org/schema/context" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-current.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd">
+
+
+ <!-- exception strategy defined -->
+
+
+
+
+
+
+
+
+    <context:property-placeholder location="flights-${env}.properties"/>
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="${http.port}" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="United_HTTP_Request_Configuration" host="${united.host}" port="80" doc:name="HTTP Request Configuration" protocol="HTTP"/>
+    <http:request-config name="american_HTTP_Request_Configuration" host="apdev-american-ws-vibhor.cloudhub.io" port="80" basePath="/api" doc:name="HTTP Request Configuration" protocol="HTTP">
+        <http:raml-api-configuration location="https://anypoint.mulesoft.com/apiplatform/repository/v2/organizations/560b5e9e-a7e7-4065-8d42-06c9d3f4c121/public/apis/4817731/versions/93378/files/root"/>
+    </http:request-config>
+    <ws:consumer-config name="Delta_Web_Service_Consumer" service="TicketServiceService" port="TicketServicePort" serviceAddress="http://training-u.cloudhub.io/essentials/delta" wsdlLocation="http://mu.mulesoft-training.com/essentials/delta?wsdl" doc:name="Web Service Consumer"/>
+    
+    
+    <configuration defaultExceptionStrategy-ref="implementationChoice_Exception_Strategy" doc:name="Configuration">
+       <!--   <http:config useTransportForUris="false"/> -->
+       
+ <expression-language>
+ <global-functions>
+    def getSeats(type){
+    	if(type.contains("777")){
+    		return 150;
+    	}
+    	else{
+    		return 300;
+    	}
+    }
+    
+ </global-functions>
+ </expression-language>
+       
+    </configuration>
+    
+    
+    <payload-type-filter expectedType="java.util.List" name="Filter_EMPTY_Payload" doc:name="Payload"/>
+    <choice-exception-strategy name = "implementationChoice_Exception_Strategy" >
+            <catch-exception-strategy when="#[exception.causeMatches('com.mulesoft.weave.*')]" doc:name="unknown Destination">
+                <set-payload value="Unknown Destinantion -  #[flowVars.code + '\n' +exception]" doc:name="Set Payload"/>
+                <set-property propertyName="http.status" value="400" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </catch-exception-strategy>
+            
+            <catch-exception-strategy when="#[exception.message=='empty.']" doc:name="EmptyPayload">
+                <set-payload value="Unknown Destinantion -  #[flowVars.code + '\n' +exception]" doc:name="Set Payload"/>
+                <set-property propertyName="http.status" value="400" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </catch-exception-strategy>
+            <catch-exception-strategy doc:name="catch all">
+                <set-payload value="MESSAGE FROM SERVICE CURRENTLY UNAVAILABLE #['\n'+exception]" doc:name="Set Payload"/>
+                <set-property propertyName="http.code" value="500" doc:name="Property"/>
+                <logger level="INFO" doc:name="Logger"/>
+            </catch-exception-strategy>
+        </choice-exception-strategy>
+</mule>
