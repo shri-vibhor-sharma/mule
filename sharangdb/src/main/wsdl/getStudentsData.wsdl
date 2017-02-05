@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<definitions targetNamespace="urn:getStudentsData" xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:tns="urn:getStudentsData" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+             xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:weo="http://www.example.org">
+ 
+  <types>
+    <xsd:schema>
+      <xsd:import schemaLocation="studentsSchema.xsd" namespace="http://www.example.org"/>
+    </xsd:schema>
+  </types>
+  <portType name="getAllData">
+    <operation name="getAllEmployees">
+      <input message="tns:request"/>
+      <output message="tns:response"/>
+    </operation>
+  </portType>
+  <message name="request">
+    <part name="myType" element="weo:myEMP"/>
+  </message>
+  <message name="response">
+    <part name="employeeResponse" type="weo:EmployeesCollection"/>
+  </message>
+  <binding name="getAllDataSOAP11Binding" type="tns:getAllData">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="getAllEmployees">
+      <soap:operation style="document" soapAction="urn:getStudentsData/getAllEmployees"/>
+      <input>
+        <soap:body use="literal" parts="myType"/>
+      </input>
+      <output>
+        <soap:body use="literal" parts="employeeResponse"/>
+      </output>
+    </operation>
+  </binding>
+  <service name="myEmployeeService">
+    <port name="localhost" binding="tns:getAllDataSOAP11Binding">
+      <soap:address location="http://localhost:8081/myEmployeeService/localhost"/>
+    </port>
+  </service>
+</definitions>

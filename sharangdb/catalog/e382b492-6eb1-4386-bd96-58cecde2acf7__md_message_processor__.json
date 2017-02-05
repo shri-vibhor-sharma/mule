@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "SOAPVibhor"
+        }
+    },
+    "id": "e382b492-6eb1-4386-bd96-58cecde2acf7",
+    "version": "5.2.0.0"
+}

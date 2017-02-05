@@ -1,0 +1,139 @@
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+  <http:listener-config name="api-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+  <apikit-soap:config name="/myEmployeeService/localhost/api-config" wsdlUrl="getStudentsData.wsdl" serviceName="myEmployeeService" portName="localhost" doc:name="APIkit SOAP: Configuration"/>
+    <db:oracle-config name="Oracle_Configuration" host="localhost" port="1521" instance="xe" user="hr" password="hr" doc:name="Oracle Configuration"/>
+    <sub-flow name="returnALLEmp">
+        <dw:transform-message doc:name="Transform Message"/>
+        <db:select config-ref="Oracle_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[select * from employees]]></db:parameterized-query>
+        </db:select>
+        <dw:transform-message metadata:id="1372e592-b973-4815-b544-6b9789a5e646" doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data\list_map_1.dwl"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 http://www.example.org
+---
+{
+	ns0#EmployeeResponse: {
+		ns0#EmployeeCollection: {
+			(payload map ((payload01 , indexOfPayload01) -> {
+				ns0#Employees: {
+					ns0#employeeId: payload01.EMPLOYEE_ID as :number,
+					ns0#firstName: payload01.FIRST_NAME,
+					ns0#lastName: payload01.LAST_NAME,
+					ns0#email: payload01.EMAIL,
+					ns0#phoneNumber: payload01.PHONE_NUMBER,
+					ns0#hireDate: payload01.HIRE_DATE,
+					ns0#jobId: payload01.JOB_ID,
+					ns0#salary: payload01.SALARY,
+					ns0#commissionPct: payload01.COMMISSION_PCT,
+					ns0#departmentId: payload01.DEPARTMENT_ID,
+					ns0#managerId: payload01.MANAGER_ID
+				}
+			}))
+		}
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </sub-flow>
+    <flow name="sharangdbFlow">
+        <http:listener config-ref="api-httpListenerConfig" path="/getAllEMP" allowedMethods="GET" doc:name="HTTP"/>
+        <db:select config-ref="Oracle_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[select * from employees]]></db:parameterized-query>
+        </db:select>
+        <dw:transform-message metadata:id="d8fa777a-7c0d-4521-b450-981bc5ef961f" doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+	ctc: payload01.COMMISSION_PCT,
+	emailID: payload01.EMAIL,
+	userName: payload01.PHONE_NUMBER,
+	emp_id: payload01.EMPLOYEE_ID,
+	empName: payload01.FIRST_NAME++ payload01.LAST_NAME
+})]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+  <flow name="api-main">
+    <http:listener path="/myEmployeeService/localhost" config-ref="api-httpListenerConfig" doc:name="/myEmployeeService/localhost" />
+    <apikit-soap:router config-ref="/myEmployeeService/localhost/api-config" doc:name="SOAP Router"/>
+  </flow>
+  <flow name="getAllEmployees:/myEmployeeService/localhost/api-config">
+        <dw:transform-message metadata:id="0361e3bf-e1ca-4b24-bf5c-719097d2d394" doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+%namespace ns0 http://www.example.org
+---
+payload.ns0#myEMP]]></dw:set-payload>
+            <dw:set-variable variableName="empID"><![CDATA[%dw 1.0
+%output application/java
+%namespace ns0 http://www.example.org
+---
+payload.ns0#myEMP]]></dw:set-variable>
+        </dw:transform-message>
+        <set-session-variable variableName="sess_empID" value="#[flowVars.empID]" doc:name="Session Variable"/>
+        <choice doc:name="Choice">
+            <when expression="#[payload.isEmpty() ==true]">
+                <flow-ref name="returnALLEmp" doc:name="returnALLEmp"/>
+            </when>
+            <when expression="#[payload.isEmpty() ==false]">
+                <flow-ref name="sendSingleEmpDATA" doc:name="sendSingleEmpDATA"/>
+            </when>
+        </choice>
+
+  </flow>
+    <flow name="sharangdbFlow1">
+        <http:listener config-ref="api-httpListenerConfig" path="/proc" allowedMethods="post" doc:name="HTTP"/>
+        <dw:transform-message metadata:id="a9c41dec-1c6e-4e1b-afb3-5a0a1c6b9c5f" doc:name="Transform Message">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	empID: payload.emp_id,
+	hike: payload.pct
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <db:stored-procedure config-ref="Oracle_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[exec proc Adjust_Salary(#[payload.empID],#[payload.hike])]]></db:parameterized-query>
+        </db:stored-procedure>
+    </flow>
+    <sub-flow name="sendSingleEmpDATA">
+        <db:select config-ref="Oracle_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[select * from employees where employee_id = #[sessionVars.sess_empID]]]></db:parameterized-query>
+        </db:select>
+        <dw:transform-message metadata:id="442d0eb8-6c63-484d-9061-790b6063c110" doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 http://www.example.org
+---
+{
+	ns0#EmployeeResponse: {
+		ns0#EmployeeCollection: {
+			(payload map ((payload01 , indexOfPayload01) -> {
+				ns0#Employees: {
+					ns0#employeeId: payload01.EMPLOYEE_ID as :number,
+					ns0#firstName: payload01.FIRST_NAME,
+					ns0#lastName: payload01.LAST_NAME,
+					ns0#email: payload01.EMAIL,
+					ns0#phoneNumber: payload01.PHONE_NUMBER,
+					ns0#hireDate: payload01.HIRE_DATE,
+					ns0#jobId: payload01.JOB_ID,
+					ns0#salary: payload01.SALARY,
+					ns0#commissionPct: payload01.COMMISSION_PCT,
+					ns0#departmentId: payload01.DEPARTMENT_ID as :number,
+					ns0#managerId: payload01.MANAGER_ID as :string
+				}
+			}))
+		}
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </sub-flow>
+</mule>

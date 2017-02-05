@@ -1,0 +1,35 @@
+#%RAML 0.8
+title : cloudhub api dynamically deploy
+/createApplication:
+  post:
+    description: Creates CloudHub application and domain
+    body:
+        application/json:
+          example: |
+                 {
+                  “domain” : “TestAppVibhor”,
+                  “workers” : 1,
+                  “muleVersion”:”3.8.1″,
+                  “properties” : {
+                  “your.system.property” : “some.value”,
+                  “your.system.property.2” : “some.value.2”
+                                  }
+                 }  
+    responses:
+      200:
+        description: message for successful application and domain creation.
+        body:
+          application/json:
+            example: |
+              {
+                “message”:”Created successfully!!”,
+                “status”:200
+              }   
+      409:
+        description: message for application and domain already exits.
+        body:
+          application/json:
+            example: |
+              {
+                “message”:”The application name is already used by other application”
+              }

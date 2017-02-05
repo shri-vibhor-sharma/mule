@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "sharangEmployee"
+        }
+    },
+    "id": "45fe9645-abd7-4dfd-88d6-d594b24053f5",
+    "version": "5.2.0.0"
+}

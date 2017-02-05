@@ -1,0 +1,32 @@
+<custom__type__definition>
+  <version>5.2.0.0</version>
+  <typeName class="org.mule.common.metadata.DefaultMetaDataKey">
+    <id>sharangEmployee</id>
+    <displayName>sharangEmployee</displayName>
+    <category>DEFAULT</category>
+    <metaDataKeyPropertiesManager>
+      <properties>
+        <org.mule.common.metadata.key.property.dsql.DsqlFromMetaDataKeyProperty/>
+      </properties>
+    </metaDataKeyPropertiesManager>
+  </typeName>
+  <metadataModel class="org.mule.common.metadata.DefaultPojoMetaDataModel">
+    <implementationClass>com.mulesoft.ltmdata.MapType$</implementationClass>
+    <dataType>POJO</dataType>
+    <metaDataModelPropertiesManager>
+      <properties/>
+    </metaDataModelPropertiesManager>
+    <fields/>
+    <clazzName>com.mulesoft.ltmdata.MapType$</clazzName>
+    <isInterface>false</isInterface>
+    <name>MapType$</name>
+    <parentNames>
+      <string>com.mulesoft.ltmdata.ItemType</string>
+      <string>scala.Serializable</string>
+      <string>scala.Equals</string>
+      <string>java.lang.Object</string>
+      <string>scala.Product</string>
+      <string>java.io.Serializable</string>
+    </parentNames>
+  </metadataModel>
+</custom__type__definition>
