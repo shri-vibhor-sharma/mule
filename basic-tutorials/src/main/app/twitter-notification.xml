@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:github="http://www.mulesoft.org/schema/mule/github" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:twitter="http://www.mulesoft.org/schema/mule/twitter" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/twitter http://www.mulesoft.org/schema/mule/twitter/current/mule-twitter.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/github http://www.mulesoft.org/schema/mule/github/current/mule-github.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <twitter:config name="Twitter__Configuration" accessKey="566939580-ICdtZxiIGWIUcGPhRx4kwvXeQMgp4fZ2QsNXo3DH" accessSecret="0aJD72D4YNnwI1xLVELEbknCu2f2ghtD5dtfQ4qI0NyCC" consumerKey="4WGW6wYHnI5rwKDV3yoH7Zhkn" consumerSecret="gjyMrSKrWnDeSuUmpsUUzEoUbhfL6LKivm3SrRonvqL4Y0ow8R" doc:name="Twitter: Configuration"/>
+    <github:config name="GitHub__Configuration" connectionUser="svibhors@gmail.com" connectionPassword="Soumya92!!" doc:name="GitHub: Configuration"/>
+    <flow name="sendTweet" processingStrategy="synchronous">
+        <foreach collection="#[payload]" doc:name="For Each">
+            <dw:transform-message metadata:id="9283902d-9362-4c1e-a5dd-6f9c4ca4e1a2" doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/text
+---
+{
+"Hi,Please check out my new repository":payload.name,
+ "At the below url": payload.url
+}]]></dw:set-payload>
+            </dw:transform-message>
+            <twitter:update-status config-ref="Twitter__Configuration" status="#[message.payload]" doc:name="Twitter"/>
+        </foreach>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    <flow name="twitter-notificationFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/repos" doc:name="HTTP"/>
+        <github:get-repositories-for-user config-ref="GitHub__Configuration" user="shri-vibhor-sharma" doc:name="GitHub"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload map (
+{
+	name:$.name,
+	URL:$.url
+}
+
+)]]></dw:set-payload>
+        </dw:transform-message>
+        <set-session-variable variableName="repositories" value="#[payload]" doc:name="Session Variable"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <flow-ref name="sendTweet" doc:name="sendTweet"/>
+    </flow>
+</mule>

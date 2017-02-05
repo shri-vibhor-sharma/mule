@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+  <!--   <encryption:config name="Encryption" defaultEncrypter="PGP_ENCRYPTER" doc:name="Encryption">
+        <encryption:pgp-encrypter-config publicKeyRingFileName="pubring.gpg" secretKeyRingFileName="secring.gpg" secretAliasId="3554863418803397800" 
+        secretPassphrase="test1234" principal="muleuser@mulesoft.com"/>
+    </encryption:config>
+    
+    <flow name="pgp-encryptionFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/pgp" doc:name="HTTP"/>
+         <encryption:encrypt config-ref="Encryption" using="PGP_ENCRYPTER" doc:name="PGP Encryption"/>
+        <file:outbound-endpoint path="/src/main/resources" responseTimeout="10000" doc:name="File"/>
+       
+    </flow>
+    
+     -->  
+</mule>
