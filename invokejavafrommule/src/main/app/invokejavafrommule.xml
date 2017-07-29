@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="80" doc:name="HTTP Listener Configuration"/>
+    <spring:beans>
+        <spring:bean id="Bean" name="Addnos" 
+        class="com.mule.arthametic.ArthamethicOperations"/>
+        
+        
+    </spring:beans>
+    
+    <configuration doc:name="Configuration">
+        <expression-language>
+        <import class="com.mule.xform.xformName"></import>
+        <global-functions>
+        def setName(name){
+        return new com.mule.xform.xformName().changeName(name);
+        }
+        </global-functions>
+        </expression-language>
+    </configuration>
+    <flow name="CallJavaClassinTransformer">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/txform" allowedMethods="GET" doc:name="HTTP"/>
+        <expression-component doc:name="setName"><![CDATA[flowVars.name=message.inboundProperties.'http.query.params'.name;]]></expression-component>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	result:setName(flowVars.name)
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="AddTwoNumbersThroughJavaClass">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/addnos" doc:name="HTTP" allowedMethods="POST"/>
+        <invoke object-ref="Addnos" method="add2nos" doc:name="add2nos" name="add2nos" methodArguments="#[json:a],#[json:b]"/>
+        <object-to-string-transformer doc:name="Object to String"/>
+        <choice-exception-strategy doc:name="Choice Exception Strategy">
+            <catch-exception-strategy when="#[exception.causedBy(java.lang.NumberFormatException)]" doc:name="Catch Exception Strategy">
+                <set-payload value="your number increased the value" doc:name="Set Payload"/>
+            </catch-exception-strategy>
+            <catch-exception-strategy when="#[java.lang.Exception]" doc:name="Catch Exception Strategy">
+                <logger message="exception occured" level="INFO" doc:name="Logger"/>
+            </catch-exception-strategy>
+        </choice-exception-strategy>
+    </flow>
+</mule>
